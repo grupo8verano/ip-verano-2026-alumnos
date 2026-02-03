@@ -1,3 +1,4 @@
+
 # capa de servicio/lógica de negocio
 
 import random
@@ -6,54 +7,71 @@ from ..persistence import repositories
 from ..utilities import translator
 from django.contrib.auth import get_user
 
-def getAllImages():
-    """
-    Obtiene todas las imágenes de personajes desde la API y las convierte en objetos Card.
+def getAllImages(input=None):
+    # 1. Obtenemos los datos de la API a través del transporte.
+    json_collection = transport.getAllImages()
     
-    Esta función debe obtener los datos desde transport, transformarlos en Cards usando 
-    translator y retornar una lista de objetos Card.
-    """
-    pass
+    images = []
+
+    for objeto in json_collection:
+        # 2. Convertimos cada objeto en una Card usando el translator.
+        # Usamos toCard porque es el método estándar para este proyecto.
+        personaje_card = translator.fromRequestIntoCard(objeto)
+        images.append(personaje_card)
+
+    return images
 
 def filterByCharacter(name):
-    """
-    Filtra las cards de personajes según el nombre proporcionado.
-    
-    Se debe filtrar los personajes cuyo nombre contenga el parámetro recibido. Retorna una lista de Cards filtradas.
-    """
-    pass
+    # Traemos los personajes filtrados directamente desde la API
+    return getAllImages(name)
 
 def filterByStatus(status_name):
-    """
-    Filtra las cards de personajes según su estado (Alive/Deceased).
-    
-    Se deben filtrar los personajes que tengan el estado igual al parámetro 'status_name'. Retorna una lista de Cards filtradas.
-    """
-    pass
+    # Traemos todos los personajes y filtramos por estado (Vivo/Fallecido)
+    all_images = getAllImages()
+    filtered_images = []
 
+    for card in all_images:
+        if card.status == status_name:
+            filtered_images.append(card)
+
+    return filtered_images
+
+# Funciones de favoritos (se quedan con pass por ahora para no dar error)
 # añadir favoritos (usado desde el template 'home.html')
 def saveFavourite(request):
-    """
-    Guarda un favorito en la base de datos.
+    # 1. El translator toma los datos de la pantalla y los prepara como una Card
+    fav = translator.fromTemplateIntoCard(request)
     
-    Se deben convertir los datos del request en una Card usando el translator,
-    asignarle el usuario actual, y guardarla en el repositorio.
-    """
-    pass
+    # 2. Buscamos qué usuario está logueado para asignarle el favorito
+    # (Esto es lo que me preguntabas de fav.user)
+    fav.user = get_user(request)
+    
+    # 3. El repositorio guarda esa Card en la base de datos local (SQLite)
+    return repositories.saveFavourite(fav)
 
 def getAllFavourites(request):
-    """
-    Obtiene todos los favoritos del usuario autenticado.
+    # 1. Identificamos al usuario actual
+    user = get_user(request)
     
-    Si el usuario está autenticado, se deben obtener sus favoritos desde el repositorio,
-    transformarlos en Cards usando translator y retornar la lista. Si no está autenticado, se retorna una lista vacía.
-    """
-    pass
+    # 2. Le pedimos al repositorio todos los favoritos
+    favourite_list = repositories.getAllFavourites(user)
+    
+    # --- ESTO ES LO QUE ARREGLA EL ERROR (Líneas 58-59 aprox) ---
+    if favourite_list is None:
+        favourite_list = []
+    # -----------------------------------------------------------
+    
+    mapped_favourites = []
+    for favourite in favourite_list:
+        # 3. Convertimos cada dato en una Card para mostrarla
+        card = translator.fromRepositoryIntoCard(favourite)
+        mapped_favourites.append(card)
+
+    return mapped_favourites
 
 def deleteFavourite(request):
-    """
-    Elimina un favorito de la base de datos.
+    # 1. Obtenemos el ID del personaje que el usuario quiere borrar (viene del botón borrar)
+    fav_id = request.POST.get('id')
     
-    Se debe obtener el ID del favorito desde el POST y eliminarlo desde el repositorio.
-    """
-    pass
+    # 2. El repositorio lo elimina definitivamente de la base de datos
+    return repositories.deleteFavourite(fav_id)
