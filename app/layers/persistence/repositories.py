@@ -2,23 +2,30 @@
 from app.models import Favourite
 
 def saveFavourite(fav):
-    fav = Favourite.objects.create(
+    favourite, created = Favourite.objects.get_or_create(
         name=fav.name,
-        gender=fav.gender,
-        status=fav.status,
-        occupation=fav.occupation,
-        phrases=fav.phrases,
-        age=fav.age,
-        image=fav.image,
-        user=fav.user
+        user=fav.user,
+        defaults={
+            "gender": fav.gender,
+            "status": fav.status,
+            "occupation": fav.occupation,
+            "phrases": fav.phrases,
+            "age": fav.age,
+            "image": fav.image,
+        }
     )
-    return fav
-
+    return favourite
+    
+    
 def getAllFavourites(user):
-    """
+     return Favourite.objects.filter(user=user).values(
+        "id", "name", "gender", "status", "occupation", "phrases", "age", "image", "user_id"
+    )
+
+    
+"""
     Obtiene todos los favoritos de un usuario desde la base de datos.
     """
-    pass
 
 def deleteFavourite(favId):
     favourite = Favourite.objects.get(id=favId)

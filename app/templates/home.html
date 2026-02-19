@@ -1,3 +1,4 @@
+<!-- PRUEBA TEMPLATE: ESTE ES EL HOME.HTML QUE ESTOY EDITANDO  -->
 {% extends 'header.html' %} {% block content %}
 <main>
     <h1 class="text-center">Buscador de personajes de Los Simpsons</h1>
@@ -27,7 +28,8 @@
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% if images|length == 0 %}
-        <h2 class="text-center">La búsqueda no arrojó resultados...</h2>
+        <div class ="col-12">
+        <h2 class="text-center">La búsqueda no arrojó resultados...</h2>   
         {% else %} {% for img in images %}
         <div class="col">
             <!-- TODO: la card debe cambiar su border color dependiendo del estado del personaje:
@@ -38,12 +40,17 @@
                  Documentación: https://docs.djangoproject.com/en/4.2/ref/templates/builtins/#if
                  Bootstrap cards: https://getbootstrap.com/docs/4.0/components/card/
             -->
-            <div class="card mb-3 ms-5" style="max-width: 540px;">
-                <div class="row g-0">
-                            <div class="col-md-4 d-flex align-items-center justify-content-center p-3">
-                                <img src="{{ img.image }}" class="rounded-circle border border-3 border-dark" alt="{{ img.name }}" style="width: 150px; height: 150px; object-fit: cover;">
-                            </div>
+            <div class="card h-100   border-3 
+            {% if img.status == 'Alive' %} border-success
+            {% elif img.status == 'Deceased' %}border-secondary
+            {% else %}border-warning
+            {% endif %} ">
+                <div class="row g-0 ">
+                
+                            <div class="col-md-4 d-flex align-items-center justify-content-center p-2"> </div> 
 
+                                <img src="{{ img.image }}" class="rounded-circle border border-3 border-dark" alt="{{ img.name }}" style="width: 150px; height: 150px; object-fit: cover;">
+                            </div>                            
                             <div class="col-md-8">
                                 <div class="card-body">
                                     <h3 class="card-title text-dark fw-bold">{{ img.name }}</h3>

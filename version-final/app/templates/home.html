@@ -1,0 +1,92 @@
+<!-- PRUEBA TEMPLATE: ESTE ES EL HOME.HTML QUE ESTOY EDITANDO  -->
+{% extends 'header.html' %} {% block content %}
+<main>
+    <h1 class="text-center">Buscador de personajes de Los Simpsons</h1>
+
+    <div class="d-flex justify-content-center" style="margin-bottom: 1%">
+        <!-- Buscador del sitio -->
+        <form class="d-flex" action="{% url 'buscar' %}" method="POST">
+            {% csrf_token %}
+            <input class="form-control me-2" type="search" name="query" placeholder="Homer, Marge, Bart, Lisa..." aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Buscar</button>
+        </form>
+    </div>
+
+    <div class="d-flex gap-1 col-2 mx-auto mb-3">
+        <form method="post" action="{% url 'filter_by_status' %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="Alive">
+            <button type="submit" class="btn btn-success">Vivos</button>
+        </form>
+
+        <form method="post" action="{% url 'filter_by_status' %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="Deceased">
+            <button type="submit" class="btn btn-secondary">Fallecidos</button>
+        </form>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% if images|length == 0 %}
+        <div class ="col-12">
+        <h2 class="text-center">La búsqueda no arrojó resultados...</h2>   
+        {% else %} {% for img in images %}
+        <div class="col">
+            <!-- TODO: la card debe cambiar su border color dependiendo del estado del personaje:
+                 - Si está "Alive" (Vivo): mostrar borde verde (border-success)
+                 - Si está "Deceased" (Fallecido): mostrar borde gris (border-secondary)
+                 - Si es cualquier otro estado: mostrar borde naranja (border-warning)
+                 
+                 Documentación: https://docs.djangoproject.com/en/4.2/ref/templates/builtins/#if
+                 Bootstrap cards: https://getbootstrap.com/docs/4.0/components/card/
+            -->
+            <div class="card h-100   border-3 
+            {% if img.status == 'Alive' %} border-success
+            {% elif img.status == 'Deceased' %}border-secondary
+            {% else %}border-warning
+            {% endif %} ">
+                <div class="row g-0 ">
+                
+                            <div class="col-md-4 d-flex align-items-center justify-content-center p-2"> </div> 
+
+                                <img src="{{ img.image }}" class="rounded-circle border border-3 border-dark" alt="{{ img.name }}" style="width: 150px; height: 150px; object-fit: cover;">
+                            </div>                            
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <h3 class="card-title text-dark fw-bold">{{ img.name }}</h3>
+                                    <p class="card-text">
+                                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                            <strong><em>"{{ img.phrases }}"</em></strong>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    </p>
+                                    <p class="card-text"><small class="text-body-secondary">👤 Género: {{ img.gender }}</small></p>
+                                    {% if img.age %}
+                                    <p class="card-text"><small class="text-body-secondary">🎂 Edad: {{ img.age }} años</small></p>
+                                    {% endif %}
+                                    <p class="card-text"><small class="text-body-secondary">{% if img.status == 'Alive' %}🟢{% elif img.status == 'Deceased' %}⚫{% else %}❓{% endif %} Estado: {{ img.status }}</small></p>
+                                    <p class="card-text"><small class="text-body-secondary">💼 Ocupación: {{ img.occupation }}</small></p>
+                                </div>
+                                {% if request.user.is_authenticated %}
+                                <div class="card-footer text-center">
+                                    <form method="post" action="{% url 'agregar-favorito' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="name" value="{{ img.name }}">
+                                        <input type="hidden" name="gender" value="{{ img.gender }}">
+                                        <input type="hidden" name="status" value="{{ img.status }}">
+                                        <input type="hidden" name="occupation" value="{{ img.occupation }}">
+                                        <input type="hidden" name="phrases" value="{{ img.phrases }}">
+                                        <input type="hidden" name="age" value="{{ img.age }}">
+                                        <input type="hidden" name="image" value="{{ img.image }}"> {% if img in favourite_list %}
+                                        <button type="submit" class="btn btn-primary btn-sm float-left" style="color:white" disabled>✔️ Favoritos</button> {% else %}
+                                        <button type="submit" class="btn btn-primary btn-sm float-left" style="color:white">❤️ Favoritos</button> {% endif %}
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %} {% endif %}
+            </div>
+</main>
+{% endblock %}

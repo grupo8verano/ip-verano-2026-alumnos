@@ -11,20 +11,43 @@ def getAllImages(input=None):
     # 1. Obtenemos los datos de la API a través del transporte.
     json_collection = transport.getAllImages()
     
-    images = []
+    cards = []
 
     for objeto in json_collection:
         # 2. Convertimos cada objeto en una Card usando el translator.
         # Usamos toCard porque es el método estándar para este proyecto.
-        personaje_card = translator.fromRequestIntoCard(objeto)
-        images.append(personaje_card)
+        card = translator.fromRequestIntoCard(objeto)
+        if isinstance(card.phrases, list):
+           if card.phrases:  # Si la lista no está vacía
+              card.phrases = random.choice(card.phrases) # Si es una lista, elegimos una frase al azar para mostrar en la tarjeta.
+        # 3. Agregamos cada Card a una lista de Cards.
+           else:
+            card.phrases = "No hay frases disponibles"
 
-    return images
+        cards.append(card)
+
+
+    return cards
 
 def filterByCharacter(name):
-    # Traemos los personajes filtrados directamente desde la API
-    return getAllImages(name)
+     images = getAllImages()
+     filtered = []
 
+     if name:
+        for image in images:
+            if name.lower() in image.name.lower():  
+                filtered.append(image)
+     else:
+        filtered = images
+
+     return filtered
+    
+
+
+           
+    
+    # Traemos los personajes filtrados directamente desde la API
+            
 def filterByStatus(status_name):
     # Traemos todos los personajes y filtramos por estado (Vivo/Fallecido)
     all_images = getAllImages()
@@ -52,6 +75,9 @@ def saveFavourite(request):
 def getAllFavourites(request):
     # 1. Identificamos al usuario actual
     user = get_user(request)
+    #soluciona el error de que si el usuario no está autenticado, no intente traer sus favoritos y devuelva una lista vacía en su lugar.
+    if not user.is_authenticated:
+        return []
     
     # 2. Le pedimos al repositorio todos los favoritos
     favourite_list = repositories.getAllFavourites(user)
@@ -75,3 +101,15 @@ def deleteFavourite(request):
     
     # 2. El repositorio lo elimina definitivamente de la base de datos
     return repositories.deleteFavourite(fav_id)
+
+def searchByName(query):
+    images = getAllImages()
+
+    if query:
+        filtered = []
+        for image in images:
+            if query.lower() in image['name'].lower():
+                filtered.append(image)
+        return filtered
+    else:
+        return images
